@@ -8,7 +8,7 @@ import session from 'express-session';
 import passport from 'passport';
 // 環境變數和資料庫
 import dotenv from 'dotenv';    // 讀取 .env 環境變數
-import { initializeDatabase } from './config/database'; // 料庫初始化函數
+import { initializeDatabase, pool } from './config/database'; // 料庫初始化函數
 
 dotenv.config();
 
@@ -44,12 +44,31 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Inspection Server (提供一個簡單的健康檢查端點，用於監控服務狀態)
+// Basic Get Test_01
 app.get('/api/health', (req, res) => {
     res.json({
         status: 'OK',
         timeStamp: new Date().toISOString(),
         environment: process.env.NODE_ENV
     });
+});
+// Basic Get Test_02
+app.get('/api/test/env', (req, res) => {
+  res.json({
+    nodeEnv: process.env.NODE_ENV,
+    port: process.env.PORT,
+    frontendUrl: process.env.FRONTEND_URL,
+    dbHost: process.env.DB_HOST
+  });
+});
+// DB Connect Test
+app.get('/api/test/db', async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT 1 as test');
+    res.json({ message: '資料庫連接成功', data: rows });
+  } catch (error) {
+    res.status(500).json({ error: '資料庫連接失敗', details: error });
+  }
 });
 
 
